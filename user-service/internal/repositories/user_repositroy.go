@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/bwmarrin/snowflake"
@@ -43,6 +44,30 @@ func (s *UserPostgresRepo) IsEmailAdminExists(ctx context.Context, email string)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("failed to validate user admin")
 		return false, err
+	}
+	return user, nil
+}
+
+func (s *UserPostgresRepo) GetUserByUsername(ctx context.Context, username string) (db.Users, error) {
+	user, err := s.db.GetUserByUsername(ctx, username)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Users{}, nil
+		}
+		logger.Logger.Error().Err(err).Msg("failed to get user by username")
+		return db.Users{}, err
+	}
+	return user, nil
+}
+
+func (s *UserPostgresRepo) GetUserByEmail(ctx context.Context, email string) (db.Users, error) {
+	user, err := s.db.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Users{}, nil
+		}
+		logger.Logger.Error().Err(err).Msg("failed to get user by email")
+		return db.Users{}, err
 	}
 	return user, nil
 }

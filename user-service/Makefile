@@ -40,6 +40,11 @@ drop-table:
 	@echo "Dropping users table..."
 	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) -c "DROP TABLE IF EXISTS users;"
 
+# Clear all Table Data
+clear-users-table:
+	@echo "Clearing all data from users table..."
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) -c "DELETE FROM users;"
+
 # Target for resetting database
 reset-db: drop-db create-db migrate-up
 	@echo "Database reset complete"

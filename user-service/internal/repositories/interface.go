@@ -9,4 +9,6 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user db.CreateUserParams) (int64, error)
 	IsEmailAdminExists(ctx context.Context, email string) (bool, error)
+	GetUserByUsername(ctx context.Context, username string) (db.Users, error)
+	GetUserByEmail(ctx context.Context, email string) (db.Users, error)
 }
