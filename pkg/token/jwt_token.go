@@ -1,19 +1,22 @@
 package token
 
 import (
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AppClaims struct {
-	UserID int64  `json:"user_id"`
-	Email  string `json:"email,omitempty"`
+	UserID  int64  `json:"user_id"`
+	Email   string `json:"email,omitempty"`
+	IsAdmin bool   `json:"is_admin"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWTToken(userID int64, secretKey string) (string, error) {
+func GenerateJWTToken(userID int64, secretKey string, isAdmin bool) (string, error) {
 	claims := AppClaims{
-		UserID: userID,
+		UserID:  userID,
+		IsAdmin: isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(2 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

@@ -78,7 +78,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, request model.UserRegi
 		return "", err
 	}
 
-	token, err := token2.GenerateJWTToken(userID, "user")
+	token, err := token2.GenerateJWTToken(userID, "user", isAdmin)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("error generating JWT token")
 		return "", err
@@ -99,7 +99,7 @@ func (s *UserServiceImpl) UserLogin(ctx context.Context, request model.UserLogin
 		return "", err
 	}
 
-	token, err := token2.GenerateJWTToken(user.ID, "user")
+	token, err := token2.GenerateJWTToken(user.ID, "user", user.IsAdmin.Bool)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("error generating JWT token")
 		return "", err
