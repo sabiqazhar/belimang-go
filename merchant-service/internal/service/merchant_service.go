@@ -22,7 +22,7 @@ func NewMerchantService(repo repositories.MerchantRepository) MerchantService {
 }
 
 func (s *MerchantSvcImpl) CreateMerchant(ctx context.Context, req model.CreateMerchantRequest) (int64, error) {
-	h3Index, err := s.GetH3Index(req.Location.Lat, req.Location.Long, 9)
+	h3Index, err := s.GetH3Index(req.Location.Lat, req.Location.Long, 8)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("failed to get h3 index")
 		return 0, err
