@@ -7,5 +7,5 @@ import (
 )
 
 type UploadRepository interface {
-	UploadImage(ctx context.Context, image db.InsertImageParams)
+	UploadImage(ctx context.Context, image db.InsertImageParams) (int64, error)
 }
