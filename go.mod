@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/minio/minio-go/v7 v7.0.95
 	github.com/rs/zerolog v1.34.0
+	github.com/uber/h3-go/v4 v4.3.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/net v0.42.0
 )

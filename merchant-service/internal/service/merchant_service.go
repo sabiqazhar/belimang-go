@@ -2,9 +2,13 @@ package service
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/db"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/model"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/repositories"
+	"github.com/sabiqazhar/belimang-go/pkg/logger"
+	"github.com/uber/h3-go/v4"
 )
 
 type MerchantSvcImpl struct {
@@ -17,15 +21,35 @@ func NewMerchantService(repo repositories.MerchantRepository) MerchantService {
 	}
 }
 
-func (s *MerchantSvcImpl) CreateMerchant(ctx context.Context, req model.CreateMerchantRequest) error {
-
-	_ := db.Merchants{
+func (s *MerchantSvcImpl) CreateMerchant(ctx context.Context, req model.CreateMerchantRequest) (int64, error) {
+	h3Index, err := s.GetH3Index(req.Location.Lat, req.Location.Long, 8)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get h3 index")
+		return 0, err
+	}
+	merchantParam := db.CreateMerchantParams{
 		Name:             req.Name,
 		MerchantCategory: req.MerchantCategory,
 		ImageUrl:         req.ImageURL,
 		Longitude:        req.Location.Long,
 		Latitude:         req.Location.Lat,
+		H3Index:          pgtype.Int8{Int64: h3Index, Valid: true},
 	}
 
-	return nil
+	merchant, err := s.repo.InsertMerchant(ctx, merchantParam)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to create merchant")
+		return 0, err
+	}
+
+	return merchant.ID, nil
+}
+
+func (s *MerchantSvcImpl) GetH3Index(lat, long float64, resolution int) (int64, error) {
+	coordinate := h3.LatLng{Lat: lat, Lng: long}
+	cell, err := h3.LatLngToCell(coordinate, resolution)
+	if err != nil {
+		return 0, err
+	}
+	return int64(cell), nil
 }
