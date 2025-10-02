@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v5"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/db"
+	"golang.org/x/net/context"
 )
 
 type MerchantPostgresRepo struct {
@@ -16,4 +17,9 @@ func NewMerchantRepository(database *pgx.Conn, node *snowflake.Node) MerchantRep
 		db:            db.New(database),
 		snowflakeNode: node,
 	}
+}
+
+func (m *MerchantPostgresRepo) InsertMerchant(ctx context.Context, merchant db.CreateMerchantParams) (db.Merchants, error) {
+	merchant.ID = m.snowflakeNode.Generate().Int64()
+	return m.db.CreateMerchant(ctx, merchant)
 }

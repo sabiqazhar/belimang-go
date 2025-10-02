@@ -43,7 +43,7 @@ drop-table:
 # Clear all Table Data
 clear-merchant-table:
 	@echo "Clearing all data from users table..."
-	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) -c "DELETE FROM merchant;"
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) -c "DELETE FROM merchants;"
 
 # Target for resetting database
 reset-db: drop-db create-db migrate-up
