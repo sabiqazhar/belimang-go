@@ -12,6 +12,7 @@ import (
 )
 
 const createMerchant = `-- name: CreateMerchant :one
+
 INSERT INTO merchants (id, name, merchant_category, image_url, longitude, latitude, h3_index)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, name, merchant_category, image_url, longitude, latitude, h3_index, created_at
@@ -27,6 +28,8 @@ type CreateMerchantParams struct {
 	H3Index          pgtype.Int8 `json:"h3_index"`
 }
 
+// noinspection SqlResolve FOR WHOLE FILE
+// noinspection SqlNoDataSourceInspection
 func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchants, error) {
 	row := q.db.QueryRow(ctx, createMerchant,
 		arg.ID,
@@ -49,4 +52,70 @@ func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getMerchantList = `-- name: GetMerchantList :many
+SELECT id, name, merchant_category, image_url, longitude, latitude, h3_index, created_at FROM merchants
+WHERE
+  -- If @merchant_id is NULL, this condition is ignored
+    ($1::bigint IS NULL OR id = $1)
+  AND
+  -- If @name is NULL, this condition is ignored
+    ($2::text IS NULL OR name ILIKE '%' || $2 || '%')
+  AND
+  -- If @merchant_category is NULL, this condition is ignored
+    ($3::text IS NULL OR merchant_category = $3)
+ORDER BY
+    -- This CASE statement handles dynamic sorting
+    CASE WHEN $4::boolean THEN created_at END ASC,
+    CASE WHEN $5::boolean THEN created_at END DESC
+LIMIT $7
+    OFFSET $6
+`
+
+type GetMerchantListParams struct {
+	MerchantID        int64  `json:"merchant_id"`
+	Name              string `json:"name"`
+	MerchantCategory  string `json:"merchant_category"`
+	CreatedAtSortAsc  bool   `json:"created_at_sort_asc"`
+	CreatedAtSortDesc bool   `json:"created_at_sort_desc"`
+	Offset            int32  `json:"offset"`
+	Limit             int32  `json:"limit"`
+}
+
+func (q *Queries) GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]Merchants, error) {
+	rows, err := q.db.Query(ctx, getMerchantList,
+		arg.MerchantID,
+		arg.Name,
+		arg.MerchantCategory,
+		arg.CreatedAtSortAsc,
+		arg.CreatedAtSortDesc,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Merchants
+	for rows.Next() {
+		var i Merchants
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.MerchantCategory,
+			&i.ImageUrl,
+			&i.Longitude,
+			&i.Latitude,
+			&i.H3Index,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
