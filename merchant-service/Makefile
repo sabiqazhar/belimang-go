@@ -54,4 +54,13 @@ sqlc-generate:
 	@echo "Generating sqlc code..."
 	@sqlc generate
 
+# seeding DB
+seed-db-up:
+	@echo "Seeding database with initial data..."
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000002_seed-merchant-data.up.sql
+
+seed-db-down:
+	@echo "Seeding database with initial data..."
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000002_seed-merchant-data.down.sql
+
 .PHONY: create-db migrate-create migrate-up migrate-down drop-db check-db drop-table reset-db sqlc-generate

@@ -12,6 +12,7 @@ import (
 )
 
 const createMerchant = `-- name: CreateMerchant :one
+
 INSERT INTO merchants (id, name, merchant_category, image_url, longitude, latitude, h3_index)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, name, merchant_category, image_url, longitude, latitude, h3_index, created_at
@@ -27,6 +28,8 @@ type CreateMerchantParams struct {
 	H3Index          pgtype.Int8 `json:"h3_index"`
 }
 
+// noinspection SqlResolve FOR WHOLE FILE
+// noinspection SqlNoDataSourceInspection
 func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchants, error) {
 	row := q.db.QueryRow(ctx, createMerchant,
 		arg.ID,
@@ -49,4 +52,97 @@ func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getMerchantList = `-- name: GetMerchantList :many
+SELECT
+    id,
+    name,
+    merchant_category,
+    image_url,
+    latitude,
+    longitude,
+    created_at
+FROM merchants
+WHERE
+  -- Filter by merchantId (optional)
+    ($1::bigint IS NULL OR id = $1::bigint)
+
+  -- Filter by name with wildcard, case insensitive (optional)
+  AND ($2::text IS NULL OR LOWER(name) ILIKE LOWER($2::text))
+
+  -- Filter by category (optional)
+  AND ($3::text IS NULL OR merchant_category = $3::text)
+
+ORDER BY
+    -- Dynamic sorting
+    CASE
+        WHEN $4::boolean = true THEN created_at
+        END ASC,
+    CASE
+        WHEN $5::boolean = true THEN created_at
+        END DESC,
+    -- Default sort if neither asc nor desc
+    CASE
+        WHEN $4::boolean = false AND $5::boolean = false THEN created_at
+        END DESC
+
+LIMIT $7::int
+    OFFSET $6::int
+`
+
+type GetMerchantListParams struct {
+	MerchantID       pgtype.Int8 `json:"merchant_id"`
+	Name             pgtype.Text `json:"name"`
+	MerchantCategory pgtype.Text `json:"merchant_category"`
+	SortAsc          bool        `json:"sort_asc"`
+	SortDesc         bool        `json:"sort_desc"`
+	Offset           int32       `json:"offset"`
+	Limit            int32       `json:"limit"`
+}
+
+type GetMerchantListRow struct {
+	ID               int64            `json:"id"`
+	Name             string           `json:"name"`
+	MerchantCategory string           `json:"merchant_category"`
+	ImageUrl         string           `json:"image_url"`
+	Latitude         float64          `json:"latitude"`
+	Longitude        float64          `json:"longitude"`
+	CreatedAt        pgtype.Timestamp `json:"created_at"`
+}
+
+func (q *Queries) GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]GetMerchantListRow, error) {
+	rows, err := q.db.Query(ctx, getMerchantList,
+		arg.MerchantID,
+		arg.Name,
+		arg.MerchantCategory,
+		arg.SortAsc,
+		arg.SortDesc,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMerchantListRow
+	for rows.Next() {
+		var i GetMerchantListRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.MerchantCategory,
+			&i.ImageUrl,
+			&i.Latitude,
+			&i.Longitude,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
