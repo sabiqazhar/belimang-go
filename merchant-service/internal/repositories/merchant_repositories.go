@@ -25,7 +25,7 @@ func (m *MerchantPostgresRepo) InsertMerchant(ctx context.Context, merchant db.C
 	return m.db.CreateMerchant(ctx, merchant)
 }
 
-func (m *MerchantPostgresRepo) GetMerchants(ctx context.Context, merchantParam db.GetMerchantListParams) ([]db.Merchants, error) {
+func (m *MerchantPostgresRepo) GetMerchants(ctx context.Context, merchantParam db.GetMerchantListParams) ([]db.GetMerchantListRow, error) {
 	merchants, err := m.db.GetMerchantList(ctx, merchantParam)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("GetMerchants")

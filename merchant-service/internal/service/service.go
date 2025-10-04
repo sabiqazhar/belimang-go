@@ -9,5 +9,5 @@ import (
 
 type MerchantService interface {
 	CreateMerchant(ctx context.Context, req model.CreateMerchantRequest) (int64, error)
-	GetMerchants(ctx context.Context, param db.GetMerchantListParams) ([]db.Merchants, error)
+	GetMerchants(ctx context.Context, param db.GetMerchantListParams) ([]db.GetMerchantListRow, error)
 }

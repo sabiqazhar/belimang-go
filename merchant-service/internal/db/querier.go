@@ -12,7 +12,7 @@ type Querier interface {
 	// noinspection SqlResolve FOR WHOLE FILE
 	// noinspection SqlNoDataSourceInspection
 	CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchants, error)
-	GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]Merchants, error)
+	GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]GetMerchantListRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -54,11 +54,11 @@ func (s *MerchantSvcImpl) getH3Index(lat, long float64, resolution int) (int64, 
 	return int64(cell), nil
 }
 
-func (s *MerchantSvcImpl) GetMerchants(ctx context.Context, param db.GetMerchantListParams) ([]db.Merchants, error) {
+func (s *MerchantSvcImpl) GetMerchants(ctx context.Context, param db.GetMerchantListParams) ([]db.GetMerchantListRow, error) {
 	merchants, err := s.repo.GetMerchants(ctx, param)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("failed to get merchants")
-		return nil, err
+		return []db.GetMerchantListRow{}, err
 	}
 	logger.Logger.Info().Interface("param", param).Msg("get merchants")
 	logger.Logger.Info().Interface("merchants", merchants).Msg("merchants")

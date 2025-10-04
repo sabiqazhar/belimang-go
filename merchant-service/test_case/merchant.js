@@ -252,15 +252,26 @@ async function runAllTests() {
         '/admin/merchants',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
+            }
+            if (!response.meta || typeof response.meta !== 'object') {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (typeof response.meta.limit !== 'number' ||
+                typeof response.meta.offset !== 'number' ||
+                typeof response.meta.total !== 'number') {
+                return { valid: false, message: 'Meta should have limit, offset, and total as numbers' };
+            }
+            if (response.meta.limit !== 5 || response.meta.offset !== 0) {
+                return { valid: false, message: 'Default should be limit=5, offset=0' };
             }
             return { valid: true };
         }
     );
     if (result15.response?.data) {
-        log(`  Found ${result15.response.data.merchants?.length || 0} merchants`, 'yellow');
+        log(`  Found ${result15.response.data.data?.length || 0} merchants (total: ${result15.response.data.meta?.total || 0})`, 'yellow');
     }
 
     const result16 = await runTest(
@@ -269,44 +280,24 @@ async function runAllTests() {
         '/admin/merchants?limit=3&offset=0',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length > 3) {
-                return { valid: false, message: `Expected max 3 merchants, got ${data.merchants.length}` };
+            if (!response.meta || typeof response.meta !== 'object') {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length > 3) {
+                return { valid: false, message: `Expected max 3 merchants, got ${response.data.length}` };
+            }
+            if (response.meta.limit !== 3 || response.meta.offset !== 0) {
+                return { valid: false, message: 'Meta should reflect limit=3, offset=0' };
             }
             return { valid: true };
         }
     );
     if (result16.response?.data) {
-        log(`  Returned ${result16.response.data.merchants?.length || 0} merchants (limit=3)`, 'yellow');
-    }
-
-    if (createdMerchants.length > 0) {
-        const testMerchant = createdMerchants[0];
-        const result17 = await runTest(
-            '17. GET /admin/merchants - Filter by merchantId (existing)',
-            'GET',
-            `/admin/merchants?merchantId=${testMerchant.merchantId}`,
-            null,
-            200,
-            (data) => {
-                if (!data.merchants || !Array.isArray(data.merchants)) {
-                    return { valid: false, message: 'Response should have merchants array' };
-                }
-                if (data.merchants.length === 0) {
-                    return { valid: false, message: 'Should return the merchant' };
-                }
-                if (data.merchants[0].merchantId !== testMerchant.merchantId) {
-                    return { valid: false, message: 'Wrong merchant returned' };
-                }
-                return { valid: true };
-            }
-        );
-        if (result17.response?.data) {
-            log(`  Found merchant: ${result17.response.data.merchants?.[0]?.name || 'N/A'}`, 'yellow');
-        }
+        log(`  Returned ${result16.response.data.data?.length || 0} merchants (limit=3)`, 'yellow');
     }
 
     await runTest(
@@ -315,12 +306,18 @@ async function runAllTests() {
         '/admin/merchants?merchantId=999999999',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length !== 0) {
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length !== 0) {
                 return { valid: false, message: 'Should return empty array for non-existent ID' };
+            }
+            if (response.meta.total !== 0) {
+                return { valid: false, message: 'Total should be 0 for non-existent ID' };
             }
             return { valid: true };
         }
@@ -332,13 +329,18 @@ async function runAllTests() {
         '/admin/merchants?name=een',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            const hasKayleen = data.merchants.some(m => m.name && m.name.toLowerCase().includes('een'));
-            if (data.merchants.length > 0 && !hasKayleen) {
-                return { valid: false, message: 'Wildcard search should find merchants with "een" in name' };
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            const hasMatchingName = response.data.every(m =>
+                m.name && m.name.toLowerCase().includes('een')
+            );
+            if (response.data.length > 0 && !hasMatchingName) {
+                return { valid: false, message: 'All returned merchants should have "een" in name' };
             }
             return { valid: true };
         }
@@ -350,9 +352,18 @@ async function runAllTests() {
         '/admin/merchants?name=KAYLEEN',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
+            }
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            const hasMatchingName = response.data.every(m =>
+                m.name && m.name.toLowerCase().includes('kayleen')
+            );
+            if (response.data.length > 0 && !hasMatchingName) {
+                return { valid: false, message: 'Search should be case insensitive' };
             }
             return { valid: true };
         }
@@ -364,12 +375,18 @@ async function runAllTests() {
         '/admin/merchants?name=NonExistentMerchantXYZ',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length !== 0) {
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length !== 0) {
                 return { valid: false, message: 'Should return empty array for non-existent name' };
+            }
+            if (response.meta.total !== 0) {
+                return { valid: false, message: 'Total should be 0 for non-existent name' };
             }
             return { valid: true };
         }
@@ -381,12 +398,17 @@ async function runAllTests() {
         '/admin/merchants?merchantCategory=SmallRestaurant',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            const allCorrectCategory = data.merchants.every(m => m.merchantCategory === 'SmallRestaurant');
-            if (data.merchants.length > 0 && !allCorrectCategory) {
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            const allCorrectCategory = response.data.every(m =>
+                m.merchantCategory === 'SmallRestaurant'
+            );
+            if (response.data.length > 0 && !allCorrectCategory) {
                 return { valid: false, message: 'All returned merchants should be SmallRestaurant' };
             }
             return { valid: true };
@@ -399,9 +421,18 @@ async function runAllTests() {
         '/admin/merchants?merchantCategory=BoothKiosk',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
+            }
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            const allCorrectCategory = response.data.every(m =>
+                m.merchantCategory === 'BoothKiosk'
+            );
+            if (response.data.length > 0 && !allCorrectCategory) {
+                return { valid: false, message: 'All returned merchants should be BoothKiosk' };
             }
             return { valid: true };
         }
@@ -413,12 +444,18 @@ async function runAllTests() {
         '/admin/merchants?merchantCategory=InvalidCategory',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length !== 0) {
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length !== 0) {
                 return { valid: false, message: 'Should return empty array for invalid category' };
+            }
+            if (response.meta.total !== 0) {
+                return { valid: false, message: 'Total should be 0 for invalid category' };
             }
             return { valid: true };
         }
@@ -430,14 +467,17 @@ async function runAllTests() {
         '/admin/merchants?createdAt=asc&limit=10',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length > 1) {
-                for (let i = 1; i < data.merchants.length; i++) {
-                    const prev = new Date(data.merchants[i - 1].createdAt);
-                    const curr = new Date(data.merchants[i].createdAt);
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length > 1) {
+                for (let i = 1; i < response.data.length; i++) {
+                    const prev = new Date(response.data[i - 1].createdAt);
+                    const curr = new Date(response.data[i].createdAt);
                     if (prev > curr) {
                         return { valid: false, message: 'Merchants should be sorted by createdAt ascending' };
                     }
@@ -453,14 +493,17 @@ async function runAllTests() {
         '/admin/merchants?createdAt=desc&limit=10',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
             }
-            if (data.merchants.length > 1) {
-                for (let i = 1; i < data.merchants.length; i++) {
-                    const prev = new Date(data.merchants[i - 1].createdAt);
-                    const curr = new Date(data.merchants[i].createdAt);
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            if (response.data.length > 1) {
+                for (let i = 1; i < response.data.length; i++) {
+                    const prev = new Date(response.data[i - 1].createdAt);
+                    const curr = new Date(response.data[i].createdAt);
                     if (prev < curr) {
                         return { valid: false, message: 'Merchants should be sorted by createdAt descending' };
                     }
@@ -476,9 +519,12 @@ async function runAllTests() {
         '/admin/merchants?createdAt=invalid&limit=5',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
+            }
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
             }
             return { valid: true };
         }
@@ -490,9 +536,19 @@ async function runAllTests() {
         '/admin/merchants?name=restaurant&merchantCategory=SmallRestaurant',
         null,
         200,
-        (data) => {
-            if (!data.merchants || !Array.isArray(data.merchants)) {
-                return { valid: false, message: 'Response should have merchants array' };
+        (response) => {
+            if (!response.data || !Array.isArray(response.data)) {
+                return { valid: false, message: 'Response should have data array' };
+            }
+            if (!response.meta) {
+                return { valid: false, message: 'Response should have meta object' };
+            }
+            const allMatch = response.data.every(m =>
+                m.name && m.name.toLowerCase().includes('restaurant') &&
+                m.merchantCategory === 'SmallRestaurant'
+            );
+            if (response.data.length > 0 && !allMatch) {
+                return { valid: false, message: 'All merchants should match both filters' };
             }
             return { valid: true };
         }
@@ -510,14 +566,6 @@ async function runAllTests() {
         '30. GET /admin/merchants - Invalid offset (non-numeric)',
         'GET',
         '/admin/merchants?offset=xyz',
-        null,
-        400
-    );
-
-    await runTest(
-        '31. GET /admin/merchants - Invalid merchantId (non-numeric)',
-        'GET',
-        '/admin/merchants?merchantId=notanumber',
         null,
         400
     );

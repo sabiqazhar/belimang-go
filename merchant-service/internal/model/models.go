@@ -21,3 +21,23 @@ type CreateMerchantRequest struct {
 	// binding:"required" ensures the location object itself is present
 	Location Location `json:"location" binding:"required"`
 }
+
+type Meta struct {
+	Limit  int `json:"limit" binding:"required,min=1,max=100"`
+	Offset int `json:"offset" binding:"required,min=1,max=100"`
+	Total  int `json:"total"`
+}
+
+type GetMerchantResponse struct {
+	Merchants []MerchantListResponse `json:"data"`
+	Meta      Meta                   `json:"meta"`
+}
+
+type MerchantListResponse struct {
+	MerchantID       string   `json:"merchantId"`
+	Name             string   `json:"name"`
+	MerchantCategory string   `json:"merchantCategory"`
+	ImageURL         string   `json:"imageUrl"`
+	Location         Location `json:"location"`
+	CreatedAt        string   `json:"createdAt"`
+}

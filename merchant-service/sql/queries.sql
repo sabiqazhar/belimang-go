@@ -7,20 +7,37 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetMerchantList :many
--- name: FindMerchants :many
-SELECT * FROM merchants
+SELECT
+    id,
+    name,
+    merchant_category,
+    image_url,
+    latitude,
+    longitude,
+    created_at
+FROM merchants
 WHERE
-  -- If @merchant_id is NULL, this condition is ignored
-    (@merchant_id::bigint IS NULL OR id = @merchant_id)
-  AND
-  -- If @name is NULL, this condition is ignored
-    (@name::text IS NULL OR name ILIKE '%' || @name || '%')
-  AND
-  -- If @merchant_category is NULL, this condition is ignored
-    (@merchant_category::text IS NULL OR merchant_category = @merchant_category)
+  -- Filter by merchantId (optional)
+    (sqlc.narg('merchant_id')::bigint IS NULL OR id = sqlc.narg('merchant_id')::bigint)
+
+  -- Filter by name with wildcard, case insensitive (optional)
+  AND (sqlc.narg('name')::text IS NULL OR LOWER(name) ILIKE LOWER(sqlc.narg('name')::text))
+
+  -- Filter by category (optional)
+  AND (sqlc.narg('merchant_category')::text IS NULL OR merchant_category = sqlc.narg('merchant_category')::text)
+
 ORDER BY
-    -- This CASE statement handles dynamic sorting
-    CASE WHEN @created_at_sort_asc::boolean THEN created_at END ASC,
-    CASE WHEN @created_at_sort_desc::boolean THEN created_at END DESC
-LIMIT sqlc.arg('limit')
-    OFFSET sqlc.arg('offset');
+    -- Dynamic sorting
+    CASE
+        WHEN sqlc.arg('sort_asc')::boolean = true THEN created_at
+        END ASC,
+    CASE
+        WHEN sqlc.arg('sort_desc')::boolean = true THEN created_at
+        END DESC,
+    -- Default sort if neither asc nor desc
+    CASE
+        WHEN sqlc.arg('sort_asc')::boolean = false AND sqlc.arg('sort_desc')::boolean = false THEN created_at
+        END DESC
+
+LIMIT sqlc.arg('limit')::int
+    OFFSET sqlc.arg('offset')::int;
