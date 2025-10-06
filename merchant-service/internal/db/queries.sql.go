@@ -11,6 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addItem = `-- name: AddItem :one
+INSERT INTO items (id, merchant_id, name, price, image_url, product_category)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id
+`
+
+type AddItemParams struct {
+	ID              int64          `json:"id"`
+	MerchantID      pgtype.Int8    `json:"merchant_id"`
+	Name            string         `json:"name"`
+	Price           pgtype.Numeric `json:"price"`
+	ImageUrl        string         `json:"image_url"`
+	ProductCategory string         `json:"product_category"`
+}
+
+func (q *Queries) AddItem(ctx context.Context, arg AddItemParams) (int64, error) {
+	row := q.db.QueryRow(ctx, addItem,
+		arg.ID,
+		arg.MerchantID,
+		arg.Name,
+		arg.Price,
+		arg.ImageUrl,
+		arg.ProductCategory,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createMerchant = `-- name: CreateMerchant :one
 
 INSERT INTO merchants (id, name, merchant_category, image_url, longitude, latitude, h3_index)
@@ -52,6 +81,83 @@ func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getItemList = `-- name: GetItemList :many
+SELECT id, name, product_category, price, image_url, created_at
+FROM items
+WHERE
+        ($1::bigint IS NULL OR id = $1::bigint)
+    AND
+        ($2::text IS NULL OR LOWER(name) ILIKE LOWER($2::text))
+    AND
+        ($3::text IS NULL OR product_category = $3::text)
+ORDER BY
+    CASE
+        WHEN $4::boolean = true THEN created_at
+        END ASC,
+    CASE
+        WHEN $5::boolean = true THEN created_at
+        END DESC,
+    CASE
+        WHEN $4::boolean = false AND $5::boolean = false THEN created_at
+        END DESC
+LIMIT $7::int
+    OFFSET $6::int
+`
+
+type GetItemListParams struct {
+	ItemId          pgtype.Int8 `json:"itemId"`
+	Name            pgtype.Text `json:"name"`
+	ProductCategory pgtype.Text `json:"product_category"`
+	SortAsc         bool        `json:"sort_asc"`
+	SortDesc        bool        `json:"sort_desc"`
+	Offset          int32       `json:"offset"`
+	Limit           int32       `json:"limit"`
+}
+
+type GetItemListRow struct {
+	ID              int64            `json:"id"`
+	Name            string           `json:"name"`
+	ProductCategory string           `json:"product_category"`
+	Price           pgtype.Numeric   `json:"price"`
+	ImageUrl        string           `json:"image_url"`
+	CreatedAt       pgtype.Timestamp `json:"created_at"`
+}
+
+func (q *Queries) GetItemList(ctx context.Context, arg GetItemListParams) ([]GetItemListRow, error) {
+	rows, err := q.db.Query(ctx, getItemList,
+		arg.ItemId,
+		arg.Name,
+		arg.ProductCategory,
+		arg.SortAsc,
+		arg.SortDesc,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetItemListRow
+	for rows.Next() {
+		var i GetItemListRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProductCategory,
+			&i.Price,
+			&i.ImageUrl,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getMerchantList = `-- name: GetMerchantList :many

@@ -8,6 +8,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Items struct {
+	ID              int64            `json:"id"`
+	MerchantID      pgtype.Int8      `json:"merchant_id"`
+	Name            string           `json:"name"`
+	ProductCategory string           `json:"product_category"`
+	ImageUrl        string           `json:"image_url"`
+	Price           pgtype.Numeric   `json:"price"`
+	CreatedAt       pgtype.Timestamp `json:"created_at"`
+}
+
 type Merchants struct {
 	ID               int64            `json:"id"`
 	Name             string           `json:"name"`

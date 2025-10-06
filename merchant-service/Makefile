@@ -18,11 +18,13 @@ migrate-create:
 migrate-up:
 	@echo "Applying migrations..."
 	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000001_create-merchant-table.up.sql
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000003_create-item-table.up.sql
 
 # Target for reverting migrations
 migrate-down:
 	@echo "Reverting migrations..."
 	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000001_create-merchant-table.down.sql
+	@docker exec -i belimang-postgres psql -U $(DB_USER) -d $(DB_NAME) < scripts/migrations/000003_create-item-table.down.sql
 
 # Target for dropping database (force disconnect users first)
 drop-db:
