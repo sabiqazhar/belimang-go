@@ -34,9 +34,9 @@ func main() {
 		logger.Logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	dataStore := repositories.NewStore(db)
+	//dataStore := repositories.NewStore(db)
 	orderRepo := repositories.NewOrderRepository(db, orderNode)
-	orderService := service.NewOrderServiceImpl(orderRepo, dataStore)
+	orderService := service.NewOrderServiceImpl(orderRepo, db)
 	orderHandler := handler.NewHandler(r, orderService)
 	orderHandler.RegisterRoutes()
 

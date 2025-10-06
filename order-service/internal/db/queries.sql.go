@@ -12,8 +12,8 @@ import (
 )
 
 const insertOrder = `-- name: InsertOrder :one
-INSERT INTO orders (id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes)
-VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
+INSERT INTO orders (id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
 `
 
 type InsertOrderParams struct {
@@ -23,6 +23,8 @@ type InsertOrderParams struct {
 	Status                         string           `json:"status"`
 	TotalAmount                    pgtype.Numeric   `json:"total_amount"`
 	EstimatedDeliveryTimeInMinutes int32            `json:"estimated_delivery_time_in_minutes"`
+	Longitude                      pgtype.Float8    `json:"longitude"`
+	Latitude                       pgtype.Float8    `json:"latitude"`
 }
 
 func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64, error) {
@@ -33,6 +35,8 @@ func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64
 		arg.Status,
 		arg.TotalAmount,
 		arg.EstimatedDeliveryTimeInMinutes,
+		arg.Longitude,
+		arg.Latitude,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -41,9 +45,9 @@ func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64
 
 type InsertOrderItemsParams struct {
 	ID            int64          `json:"id"`
-	MerchantID    int64          `json:"merchant_id"`
+	MerchantID    string         `json:"merchant_id"`
 	OrderID       pgtype.Int8    `json:"order_id"`
-	ProductID     int32          `json:"product_id"`
+	ProductID     string         `json:"product_id"`
 	Quantity      int32          `json:"quantity"`
 	Price         pgtype.Numeric `json:"price"`
 	StartingPoint pgtype.Bool    `json:"starting_point"`

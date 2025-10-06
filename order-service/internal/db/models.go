@@ -10,9 +10,9 @@ import (
 
 type OrderItems struct {
 	ID            int64          `json:"id"`
-	MerchantID    int64          `json:"merchant_id"`
+	MerchantID    string         `json:"merchant_id"`
 	OrderID       pgtype.Int8    `json:"order_id"`
-	ProductID     int32          `json:"product_id"`
+	ProductID     string         `json:"product_id"`
 	Quantity      int32          `json:"quantity"`
 	Price         pgtype.Numeric `json:"price"`
 	StartingPoint pgtype.Bool    `json:"starting_point"`

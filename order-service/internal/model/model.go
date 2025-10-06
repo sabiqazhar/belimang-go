@@ -8,20 +8,20 @@ type LongLat struct {
 type (
 	// Item item in order
 	Item struct {
-		ItemID   int64 `json:"itemId" binding:"required"`
-		Quantity int64 `json:"quantity" binding:"required"`
+		ItemID   string `json:"itemId" binding:"required"`
+		Quantity int64  `json:"quantity" binding:"required,gt=0"`
 	}
 
 	// Order param
 	Order struct {
-		MerchantID      int64  `json:"merchantId" binding:"required"`
-		IsStartingPoint bool   `json:"isStartingPoint" binding:"required"`
-		Items           []Item `json:"items" binding:"required"`
+		MerchantID      string `json:"merchantId" binding:"required"`
+		IsStartingPoint *bool  `json:"isStartingPoint" binding:"required"`
+		Items           []Item `json:"items" binding:"required,gt=0,dive"`
 	}
 
 	// CreateEstimateRequest Post Estimate Request
 	CreateEstimateRequest struct {
 		UserLocation LongLat `json:"userLocation" binding:"required"`
-		Orders       []Order `json:"orders" binding:"required"`
+		Orders       []Order `json:"orders" binding:"required,gt=0,dive"`
 	}
 )
