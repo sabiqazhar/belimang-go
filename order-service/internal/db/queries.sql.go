@@ -39,30 +39,12 @@ func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64
 	return id, err
 }
 
-const insertOrderItem = `-- name: InsertOrderItem :one
-INSERT INTO order_items (id, order_id, product_id, quantity, price, starting_point)
-VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
-`
-
-type InsertOrderItemParams struct {
+type InsertOrderItemsParams struct {
 	ID            int64          `json:"id"`
+	MerchantID    int64          `json:"merchant_id"`
 	OrderID       pgtype.Int8    `json:"order_id"`
 	ProductID     int32          `json:"product_id"`
 	Quantity      int32          `json:"quantity"`
 	Price         pgtype.Numeric `json:"price"`
 	StartingPoint pgtype.Bool    `json:"starting_point"`
-}
-
-func (q *Queries) InsertOrderItem(ctx context.Context, arg InsertOrderItemParams) (int64, error) {
-	row := q.db.QueryRow(ctx, insertOrderItem,
-		arg.ID,
-		arg.OrderID,
-		arg.ProductID,
-		arg.Quantity,
-		arg.Price,
-		arg.StartingPoint,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
 }

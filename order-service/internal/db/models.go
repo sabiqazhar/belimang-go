@@ -10,6 +10,7 @@ import (
 
 type OrderItems struct {
 	ID            int64          `json:"id"`
+	MerchantID    int64          `json:"merchant_id"`
 	OrderID       pgtype.Int8    `json:"order_id"`
 	ProductID     int32          `json:"product_id"`
 	Quantity      int32          `json:"quantity"`
@@ -24,4 +25,6 @@ type Orders struct {
 	Status                         string           `json:"status"`
 	TotalAmount                    pgtype.Numeric   `json:"total_amount"`
 	EstimatedDeliveryTimeInMinutes int32            `json:"estimated_delivery_time_in_minutes"`
+	Longitude                      pgtype.Float8    `json:"longitude"`
+	Latitude                       pgtype.Float8    `json:"latitude"`
 }
