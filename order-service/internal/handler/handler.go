@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/model"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/service"
-	"github.com/sabiqazhar/belimang-go/pkg/logger"
 )
 
 type Handler struct {
@@ -33,14 +32,13 @@ func (h *Handler) CreateEstimate(c *gin.Context) {
 	err := c.ShouldBindJSON(&request)
 
 	if err != nil {
-		logger.Logger.Error().Err(err).Msg("error binding request")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
 	orderID, err := h.service.CreateOrder(ctx, request, 1)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create order"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to create order"})
 		return
 	}
 

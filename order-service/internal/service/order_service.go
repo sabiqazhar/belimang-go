@@ -28,6 +28,11 @@ func NewOrderServiceImpl(orderRepo repositories.OrderRepository, dataStore *pgxp
 
 func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req model.CreateEstimateRequest, userId int32) (int64, error) {
 	var orderId int64
+
+	if err := s.validateStartingPoint(req); err != nil {
+		return 0, err
+	}
+
 	tx, err := s.store.Begin(ctx)
 	if err != nil {
 		return 0, err
@@ -82,4 +87,20 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req model.CreateEsti
 	}
 
 	return orderId, nil
+}
+
+func (s *OrderServiceImpl) validateStartingPoint(req model.CreateEstimateRequest) error {
+	var isStartingPointSeen bool
+	for _, orderRow := range req.Orders {
+		if *orderRow.IsStartingPoint {
+			if isStartingPointSeen {
+				return errors.New("only one starting point is allowed")
+			}
+			isStartingPointSeen = true
+		}
+	}
+	if !isStartingPointSeen {
+		return errors.New("starting point is required")
+	}
+	return nil
 }
