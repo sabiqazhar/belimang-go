@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sabiqazhar/belimang-go/pkg/logger"
 	"github.com/sabiqazhar/belimang-go/user-service/internal/db"
 )
@@ -16,7 +17,7 @@ type UserPostgresRepo struct {
 	snowflakeNode *snowflake.Node
 }
 
-func NewUserRepository(database *pgx.Conn, nodeID int64) (UserRepository, error) {
+func NewUserRepository(database *pgxpool.Pool, nodeID int64) (UserRepository, error) {
 	node, err := snowflake.NewNode(nodeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create snowflake node: %w", err)

@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"github.com/bwmarrin/snowflake"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/db"
 	"github.com/sabiqazhar/belimang-go/pkg/logger"
 	"golang.org/x/net/context"
@@ -13,7 +13,7 @@ type MerchantPostgresRepo struct {
 	snowflakeNode *snowflake.Node
 }
 
-func NewMerchantRepository(database *pgx.Conn, node *snowflake.Node) MerchantRepository {
+func NewMerchantRepository(database *pgxpool.Pool, node *snowflake.Node) MerchantRepository {
 	return &MerchantPostgresRepo{
 		db:            db.New(database),
 		snowflakeNode: node,
