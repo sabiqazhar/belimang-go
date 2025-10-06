@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/db"
@@ -63,4 +64,32 @@ func (s *MerchantSvcImpl) GetMerchants(ctx context.Context, param db.GetMerchant
 	logger.Logger.Info().Interface("param", param).Msg("get merchants")
 	logger.Logger.Info().Interface("merchants", merchants).Msg("merchants")
 	return merchants, nil
+}
+
+func (s *MerchantSvcImpl) AddItem(ctx context.Context, req model.AddItemRequest, merchantId int64) (int64, error) {
+	var price *big.Int
+	price = big.NewInt(req.Price)
+
+	itemParam := db.AddItemParams{
+		Name:            req.Name,
+		Price:           pgtype.Numeric{Int: price, Valid: true},
+		ImageUrl:        req.ImageURL,
+		MerchantID:      pgtype.Int8{Int64: merchantId, Valid: true},
+		ProductCategory: req.ProductCategory,
+	}
+	itemID, err := s.repo.AddItem(ctx, itemParam)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to add item")
+		return 0, err
+	}
+	return itemID, nil
+}
+
+func (s *MerchantSvcImpl) GetItems(ctx context.Context, param db.GetItemListParams) ([]db.GetItemListRow, error) {
+	items, err := s.repo.GetItems(ctx, param)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get items")
+		return []db.GetItemListRow{}, err
+	}
+	return items, nil
 }

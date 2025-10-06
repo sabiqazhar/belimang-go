@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS merchants
     latitude          FLOAT       NOT NULL,
     h3_index          BIGINT,
     created_at        TIMESTAMP DEFAULT NOW()
-)
+);

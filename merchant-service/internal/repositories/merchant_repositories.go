@@ -33,3 +33,22 @@ func (m *MerchantPostgresRepo) GetMerchants(ctx context.Context, merchantParam d
 	}
 	return merchants, nil
 }
+
+func (m *MerchantPostgresRepo) AddItem(ctx context.Context, item db.AddItemParams) (int64, error) {
+	item.ID = m.snowflakeNode.Generate().Int64()
+	itemID, err := m.db.AddItem(ctx, item)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("AddItem")
+		return 0, err
+	}
+	return itemID, nil
+}
+
+func (m *MerchantPostgresRepo) GetItems(ctx context.Context, param db.GetItemListParams) ([]db.GetItemListRow, error) {
+	items, err := m.db.GetItemList(ctx, param)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("GetItem")
+		return nil, err
+	}
+	return items, nil
+}

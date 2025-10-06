@@ -9,9 +9,11 @@ import (
 )
 
 type Querier interface {
+	AddItem(ctx context.Context, arg AddItemParams) (int64, error)
 	// noinspection SqlResolve FOR WHOLE FILE
 	// noinspection SqlNoDataSourceInspection
 	CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchants, error)
+	GetItemList(ctx context.Context, arg GetItemListParams) ([]GetItemListRow, error)
 	GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]GetMerchantListRow, error)
 }
 

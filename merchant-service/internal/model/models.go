@@ -41,3 +41,22 @@ type MerchantListResponse struct {
 	Location         Location `json:"location"`
 	CreatedAt        string   `json:"createdAt"`
 }
+
+// Add Item Request and Response
+type (
+	AddItemRequest struct {
+		Name            string `json:"name" binding:"required,min=1,max=30"`
+		ProductCategory string `json:"productCategory" binding:"required,oneof=SmallRestaurant MediumRestaurant LargeRestaurant MerchandiseRestaurant BoothKiosk ConvenienceStore"`
+		Price           int64  `json:"price" binding:"required,gt=1"`
+		ImageURL        string `json:"imageUrl" binding:"required,url"`
+	}
+)
+
+type GetItemResponse struct {
+	ItemId          string `json:"itemId"`
+	Name            string `json:"name"`
+	Price           int64  `json:"price"`
+	ImageURL        string `json:"imageUrl"`
+	CreatedAt       string `json:"createdAt"`
+	ProductCategory string `json:"productCategory"`
+}

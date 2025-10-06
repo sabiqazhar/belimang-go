@@ -41,3 +41,31 @@ ORDER BY
 
 LIMIT sqlc.arg('limit')::int
     OFFSET sqlc.arg('offset')::int;
+
+
+-- name: AddItem :one
+INSERT INTO items (id, merchant_id, name, price, image_url, product_category)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id;
+
+-- name: GetItemList :many
+SELECT id, name, product_category, price, image_url, created_at
+FROM items
+WHERE
+        (sqlc.narg('itemId')::bigint IS NULL OR id = sqlc.narg('itemId')::bigint)
+    AND
+        (sqlc.narg('name')::text IS NULL OR LOWER(name) ILIKE LOWER(sqlc.narg('name')::text))
+    AND
+        (sqlc.narg('product_category')::text IS NULL OR product_category = sqlc.narg('product_category')::text)
+ORDER BY
+    CASE
+        WHEN sqlc.arg('sort_asc')::boolean = true THEN created_at
+        END ASC,
+    CASE
+        WHEN sqlc.arg('sort_desc')::boolean = true THEN created_at
+        END DESC,
+    CASE
+        WHEN sqlc.arg('sort_asc')::boolean = false AND sqlc.arg('sort_desc')::boolean = false THEN created_at
+        END DESC
+LIMIT sqlc.arg('limit')::int
+    OFFSET sqlc.arg('offset')::int;
