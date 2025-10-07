@@ -13,7 +13,9 @@ type Querier interface {
 	// noinspection SqlResolve FOR WHOLE FILE
 	// noinspection SqlNoDataSourceInspection
 	CreateMerchant(ctx context.Context, arg CreateMerchantParams) (Merchants, error)
+	GetItemByID(ctx context.Context, id int64) (GetItemByIDRow, error)
 	GetItemList(ctx context.Context, arg GetItemListParams) ([]GetItemListRow, error)
+	GetMerchantById(ctx context.Context, id int64) (GetMerchantByIdRow, error)
 	GetMerchantList(ctx context.Context, arg GetMerchantListParams) ([]GetMerchantListRow, error)
 }
 

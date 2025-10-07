@@ -11,4 +11,6 @@ type MerchantRepository interface {
 	GetMerchants(ctx context.Context, merchantParam db.GetMerchantListParams) ([]db.GetMerchantListRow, error)
 	AddItem(ctx context.Context, item db.AddItemParams) (int64, error)
 	GetItems(ctx context.Context, param db.GetItemListParams) ([]db.GetItemListRow, error)
+	GetMerchantById(ctx context.Context, id int64) (db.GetMerchantByIdRow, error)
+	GetItemByID(ctx context.Context, id int64) (db.GetItemByIDRow, error)
 }

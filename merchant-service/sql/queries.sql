@@ -69,3 +69,9 @@ ORDER BY
         END DESC
 LIMIT sqlc.arg('limit')::int
     OFFSET sqlc.arg('offset')::int;
+
+-- name: GetMerchantById :one
+SELECT id, name, longitude, latitude FROM merchants WHERE id = $1;
+
+-- name: GetItemByID :one
+SELECT id, name, price, product_category, image_url, merchant_id  FROM items WHERE id = $1;

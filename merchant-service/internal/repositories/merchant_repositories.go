@@ -52,3 +52,21 @@ func (m *MerchantPostgresRepo) GetItems(ctx context.Context, param db.GetItemLis
 	}
 	return items, nil
 }
+
+func (m *MerchantPostgresRepo) GetMerchantById(ctx context.Context, id int64) (db.GetMerchantByIdRow, error) {
+	merchant, err := m.db.GetMerchantById(ctx, id)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("GetMerchantById")
+		return db.GetMerchantByIdRow{}, err
+	}
+	return merchant, nil
+}
+
+func (m *MerchantPostgresRepo) GetItemByID(ctx context.Context, id int64) (db.GetItemByIDRow, error) {
+	itemDetail, err := m.db.GetItemByID(ctx, id)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("GetMerchantItemByID")
+		return db.GetItemByIDRow{}, err
+	}
+	return itemDetail, nil
+}
