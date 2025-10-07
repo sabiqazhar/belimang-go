@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/sabiqazhar/belimang-go/order-service/internal/client"
-	pb "github.com/sabiqazhar/belimang-go/proto/merchant"
 	"strconv"
 	"time"
+
+	"github.com/sabiqazhar/belimang-go/order-service/internal/client"
+	pb "github.com/sabiqazhar/belimang-go/proto/merchant"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -50,14 +51,22 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req model.CreateEsti
 		return 0, errors.New("amount is zero")
 	}
 
+	orders, err := s.gatherMerchantDetailFromOrder(ctx, req.Orders)
+	if err != nil {
+		return 0, err
+	}
+
+	estimatedDistance := s.calculateEstimate(orders, req.UserLocation)
+
 	order := db.InsertOrderParams{
 		CustomerID:                     userId,
 		Status:                         "pending",
 		OrderDate:                      pgtype.Timestamp{Time: time.Now()},
 		Longitude:                      pgtype.Float8{Float64: req.UserLocation.Long, Valid: true},
 		Latitude:                       pgtype.Float8{Float64: req.UserLocation.Lat, Valid: true},
-		TotalAmount:                    amount, // Example fixed amount
-		EstimatedDeliveryTimeInMinutes: 400,    // Example fixed time
+		TotalAmount:                    amount,                                                 // Example fixed amount
+		EstimatedDeliveryTimeInMinutes: int32(helper.CalculateDeliveryTime(estimatedDistance)), // Example fixed time
+		TotalDistanceInMeters:          int32(estimatedDistance),
 	}
 
 	orderID, err := txRepo.InsertOrder(ctx, order)
@@ -168,5 +177,3 @@ func (s *OrderServiceImpl) calculateEstimate(merchants []model.MerchantDetail, f
 	totalDistance += helper.CalculateHaversineDistance(merchants[len(merchants)-1].Location.Lat, merchants[len(merchants)-1].Location.Long, finalLocation.Lat, finalLocation.Long)
 	return totalDistance
 }
-
-func (s *OrderServiceImpl) GetItemDetail() {}

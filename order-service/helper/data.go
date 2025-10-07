@@ -42,3 +42,10 @@ func CalculateHaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 
 	return distance // Distance in meters
 }
+
+func CalculateDeliveryTime(distanceMeters float64) float64 {
+	// The formula is: ((distanceMeters / 1000) / 40) * 60
+	// This simplifies to: distanceMeters * 0.0015
+	const minutesPerMeter = 0.0015
+	return distanceMeters * minutesPerMeter
+}

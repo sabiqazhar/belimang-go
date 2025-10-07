@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS merchants
 (
     id                BIGINT PRIMARY KEY,
-    name              VARCHAR(30) NOT NULL,
-    merchant_category VARCHAR(20) NOT NULL,
+    name              VARCHAR(50) NOT NULL,
+    merchant_category VARCHAR(50) NOT NULL,
     image_url         TEXT        NOT NULL,
     longitude         FLOAT       NOT NULL,
     latitude          FLOAT       NOT NULL,

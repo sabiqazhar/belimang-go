@@ -50,7 +50,7 @@ func main() {
 	orderHandler := handler.NewHandler(r, orderService)
 	orderHandler.RegisterRoutes()
 
-	logger.Logger.Info().Msg("starting order service on port 8082")
+	logger.Logger.Info().Msg("starting order service on port 8083")
 	if err := r.Run(":8083"); err != nil {
 		logger.Logger.Fatal().Err(err).Msg("failed to run server")
 	}
