@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"github.com/sabiqazhar/belimang-go/infrasturcture/database"
+	"github.com/sabiqazhar/belimang-go/order-service/internal/client"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/handler"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/repositories"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/service"
@@ -34,8 +35,18 @@ func main() {
 		logger.Logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
+	// --- Connect to Merchant Service via gRPC ---
+	merchantServiceAddr := "localhost:50051" // Merchant gRPC address
+	merchantClient, err := client.NewMerchantClient(merchantServiceAddr)
+	if err != nil {
+		logger.Logger.Fatal().Err(err).Msg("failed to connect to merchant service")
+	}
+	defer merchantClient.Conn.Close()
+	logger.Logger.Info().Msgf("✅ Connected to Merchant Service at %s", merchantServiceAddr)
+
+	// --- Initialize repositories & services ---
 	orderRepo := repositories.NewOrderRepository(db, orderNode)
-	orderService := service.NewOrderServiceImpl(orderRepo, db)
+	orderService := service.NewOrderServiceImpl(orderRepo, db, merchantClient)
 	orderHandler := handler.NewHandler(r, orderService)
 	orderHandler.RegisterRoutes()
 

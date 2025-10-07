@@ -25,3 +25,10 @@ type (
 		Orders       []Order `json:"orders" binding:"required,gt=0,dive"`
 	}
 )
+
+type (
+	MerchantDetail struct {
+		ID       string
+		Location LongLat
+	}
+)

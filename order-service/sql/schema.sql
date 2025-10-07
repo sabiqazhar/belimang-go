@@ -5,6 +5,7 @@ CREATE TABLE  IF NOT EXISTS orders (
     status VARCHAR(50) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     estimated_delivery_time_in_minutes INT NOT NULL,
+    total_distance_in_meters INT NOT NULL,
     longitude FLOAT,
     latitude FLOAT
 );
