@@ -24,4 +24,17 @@ type (
 		UserLocation LongLat `json:"userLocation" binding:"required"`
 		Orders       []Order `json:"orders" binding:"required,gt=0,dive"`
 	}
+
+	CreateOrderResponse struct {
+		CalculatedEstimateId           int64   `json:"calculatedEstimateId"`
+		EstimatedDeliveryTimeInMinutes float64 `json:"estimatedDeliveryTimeInMinutes"`
+		TotalPrice                     float64 `json:"totalPrice"`
+	}
+)
+
+type (
+	MerchantDetail struct {
+		ID       string
+		Location LongLat
+	}
 )

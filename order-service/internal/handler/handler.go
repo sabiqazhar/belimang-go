@@ -36,15 +36,11 @@ func (h *Handler) CreateEstimate(c *gin.Context) {
 		return
 	}
 
-	orderID, err := h.service.CreateOrder(ctx, request, 1)
+	orderDetail, err := h.service.CreateOrder(ctx, request, 1)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to create order"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"totalPrice":                     100.00,
-		"estimatedDeliveryTimeInMinutes": 400,
-		"calculatedEstimateId":           orderID,
-	})
+	c.JSON(http.StatusOK, orderDetail)
 }

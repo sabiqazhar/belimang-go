@@ -12,8 +12,8 @@ import (
 )
 
 const insertOrder = `-- name: InsertOrder :one
-INSERT INTO orders (id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
+INSERT INTO orders (id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude, total_distance_in_meters)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
 `
 
 type InsertOrderParams struct {
@@ -25,6 +25,7 @@ type InsertOrderParams struct {
 	EstimatedDeliveryTimeInMinutes int32            `json:"estimated_delivery_time_in_minutes"`
 	Longitude                      pgtype.Float8    `json:"longitude"`
 	Latitude                       pgtype.Float8    `json:"latitude"`
+	TotalDistanceInMeters          int32            `json:"total_distance_in_meters"`
 }
 
 func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64, error) {
@@ -37,6 +38,7 @@ func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) (int64
 		arg.EstimatedDeliveryTimeInMinutes,
 		arg.Longitude,
 		arg.Latitude,
+		arg.TotalDistanceInMeters,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -51,4 +53,32 @@ type InsertOrderItemsParams struct {
 	Quantity      int32          `json:"quantity"`
 	Price         pgtype.Numeric `json:"price"`
 	StartingPoint pgtype.Bool    `json:"starting_point"`
+}
+
+const updateOrderAmount = `-- name: UpdateOrderAmount :exec
+UPDATE orders SET total_amount = $2 WHERE id = $1
+`
+
+type UpdateOrderAmountParams struct {
+	ID          int64          `json:"id"`
+	TotalAmount pgtype.Numeric `json:"total_amount"`
+}
+
+func (q *Queries) UpdateOrderAmount(ctx context.Context, arg UpdateOrderAmountParams) error {
+	_, err := q.db.Exec(ctx, updateOrderAmount, arg.ID, arg.TotalAmount)
+	return err
+}
+
+const updateOrderStatus = `-- name: UpdateOrderStatus :exec
+UPDATE orders SET status = $2 WHERE id = $1
+`
+
+type UpdateOrderStatusParams struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+}
+
+func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {
+	_, err := q.db.Exec(ctx, updateOrderStatus, arg.ID, arg.Status)
+	return err
 }

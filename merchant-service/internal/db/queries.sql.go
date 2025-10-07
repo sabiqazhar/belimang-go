@@ -83,6 +83,33 @@ func (q *Queries) CreateMerchant(ctx context.Context, arg CreateMerchantParams) 
 	return i, err
 }
 
+const getItemByID = `-- name: GetItemByID :one
+SELECT id, name, price, product_category, image_url, merchant_id  FROM items WHERE id = $1
+`
+
+type GetItemByIDRow struct {
+	ID              int64          `json:"id"`
+	Name            string         `json:"name"`
+	Price           pgtype.Numeric `json:"price"`
+	ProductCategory string         `json:"product_category"`
+	ImageUrl        string         `json:"image_url"`
+	MerchantID      pgtype.Int8    `json:"merchant_id"`
+}
+
+func (q *Queries) GetItemByID(ctx context.Context, id int64) (GetItemByIDRow, error) {
+	row := q.db.QueryRow(ctx, getItemByID, id)
+	var i GetItemByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Price,
+		&i.ProductCategory,
+		&i.ImageUrl,
+		&i.MerchantID,
+	)
+	return i, err
+}
+
 const getItemList = `-- name: GetItemList :many
 SELECT id, name, product_category, price, image_url, created_at
 FROM items
@@ -158,6 +185,29 @@ func (q *Queries) GetItemList(ctx context.Context, arg GetItemListParams) ([]Get
 		return nil, err
 	}
 	return items, nil
+}
+
+const getMerchantById = `-- name: GetMerchantById :one
+SELECT id, name, longitude, latitude FROM merchants WHERE id = $1
+`
+
+type GetMerchantByIdRow struct {
+	ID        int64   `json:"id"`
+	Name      string  `json:"name"`
+	Longitude float64 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+}
+
+func (q *Queries) GetMerchantById(ctx context.Context, id int64) (GetMerchantByIdRow, error) {
+	row := q.db.QueryRow(ctx, getMerchantById, id)
+	var i GetMerchantByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Longitude,
+		&i.Latitude,
+	)
+	return i, err
 }
 
 const getMerchantList = `-- name: GetMerchantList :many

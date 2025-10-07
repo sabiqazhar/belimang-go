@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/sabiqazhar/belimang-go/merchant-service/constant"
 	"math/big"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -92,4 +93,43 @@ func (s *MerchantSvcImpl) GetItems(ctx context.Context, param db.GetItemListPara
 		return []db.GetItemListRow{}, err
 	}
 	return items, nil
+}
+
+func (s *MerchantSvcImpl) GetMerchantById(ctx context.Context, id int64) (db.GetMerchantByIdRow, error) {
+	merchant, err := s.repo.GetMerchantById(ctx, id)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get merchant by id")
+		return db.GetMerchantByIdRow{}, err
+	}
+	return merchant, nil
+}
+
+func (s *MerchantSvcImpl) GetItemByID(ctx context.Context, id int64) (db.GetItemByIDRow, error) {
+	itemDetail, err := s.repo.GetItemByID(ctx, id)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get merchant by id")
+		return db.GetItemByIDRow{}, err
+	}
+	return itemDetail, nil
+}
+
+func (s *MerchantSvcImpl) IsValidMerchantItem(ctx context.Context, merchantId int64, itemId []int64) ([]db.GetItemByIDRow, error) {
+	pgTypeMerchantID := pgtype.Int8{Int64: merchantId, Valid: true}
+	var result []db.GetItemByIDRow
+
+	for _, id := range itemId {
+		itemDetail, err := s.repo.GetItemByID(ctx, id)
+		if err != nil {
+			logger.Logger.Error().Err(err).Msg("failed to get merchant by id")
+			return []db.GetItemByIDRow{}, err
+		}
+
+		if itemDetail.MerchantID != pgTypeMerchantID {
+			return []db.GetItemByIDRow{}, constant.InvalidMerchantItemError
+		}
+
+		result = append(result, itemDetail)
+	}
+
+	return result, nil
 }

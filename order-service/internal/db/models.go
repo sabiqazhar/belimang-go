@@ -25,6 +25,7 @@ type Orders struct {
 	Status                         string           `json:"status"`
 	TotalAmount                    pgtype.Numeric   `json:"total_amount"`
 	EstimatedDeliveryTimeInMinutes int32            `json:"estimated_delivery_time_in_minutes"`
+	TotalDistanceInMeters          int32            `json:"total_distance_in_meters"`
 	Longitude                      pgtype.Float8    `json:"longitude"`
 	Latitude                       pgtype.Float8    `json:"latitude"`
 }

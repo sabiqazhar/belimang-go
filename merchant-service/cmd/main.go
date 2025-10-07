@@ -8,12 +8,14 @@ import (
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/repositories"
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/service"
 	"github.com/sabiqazhar/belimang-go/pkg/logger"
+	pb "github.com/sabiqazhar/belimang-go/proto/merchant"
+	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 func main() {
 	logger.InitLogger()
-
-	r := gin.Default()
 
 	merchantNode, err := snowflake.NewNode(2)
 	if err != nil {
@@ -36,12 +38,33 @@ func main() {
 
 	merchantRepo := repositories.NewMerchantRepository(db, merchantNode)
 	merchantService := service.NewMerchantService(merchantRepo)
-	merchantHandler := handler.NewMerchantHandler(r, merchantService)
 
+	// --- gRPC Server Setup ---
+	go func() {
+		grpcPort := ":50051"
+		lis, err := net.Listen("tcp", grpcPort)
+		if err != nil {
+			log.Fatalf("failed to listen on gRPC port: %v", err)
+		}
+
+		s := grpc.NewServer()
+
+		merchantGRPCHandler := handler.NewMerchantGRPCHandler(merchantService)
+		pb.RegisterMerchantServiceServer(s, merchantGRPCHandler)
+
+		logger.Logger.Info().Msgf("🚀 starting gRPC server on port %s", grpcPort)
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
+		}
+	}()
+
+	r := gin.Default()
+	merchantHandler := handler.NewMerchantHandler(r, merchantService)
 	merchantHandler.RegisterRoutes()
 
-	logger.Logger.Info().Msg("starting merchant service on port 8081")
-	if err := r.Run(":8081"); err != nil {
-		logger.Logger.Fatal().Err(err).Msg("failed to run server")
+	httpPort := ":8081"
+	logger.Logger.Info().Msgf("🚀 starting HTTP server on port %s", httpPort)
+	if err := r.Run(httpPort); err != nil {
+		logger.Logger.Fatal().Err(err).Msg("failed to run HTTP server")
 	}
 }
