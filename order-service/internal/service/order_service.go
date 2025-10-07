@@ -167,12 +167,30 @@ func (s *OrderServiceImpl) gatherMerchantDetailFromOrder(ctx context.Context, me
 }
 
 func (s *OrderServiceImpl) calculateEstimate(merchants []model.MerchantDetail, finalLocation model.LongLat) float64 {
-	var totalDistance float64
-	for _, merchant := range merchants[:len(merchants)-1] {
-		totalDistance += helper.CalculateHaversineDistance(merchant.Location.Lat, merchant.Location.Long, merchants[1].Location.Lat, merchants[1].Location.Long)
+	if len(merchants) == 0 {
+		return 0.0
 	}
 
-	totalDistance += helper.CalculateHaversineDistance(merchants[len(merchants)-1].Location.Lat, merchants[len(merchants)-1].Location.Long, finalLocation.Lat, finalLocation.Long)
+	var totalDistance float64
+	for idx := 0; idx < len(merchants)-1; idx++ {
+		currentMerchant := merchants[idx]
+		nextMerchant := merchants[idx+1]
+		totalDistance += helper.CalculateHaversineDistance(
+			currentMerchant.Location.Lat,
+			currentMerchant.Location.Long,
+			nextMerchant.Location.Lat,
+			nextMerchant.Location.Long,
+		)
+	}
+
+	lastMerchant := merchants[len(merchants)-1]
+	totalDistance += helper.CalculateHaversineDistance(
+		lastMerchant.Location.Lat,
+		lastMerchant.Location.Long,
+		finalLocation.Lat,
+		finalLocation.Long,
+	)
+
 	return totalDistance
 }
 
