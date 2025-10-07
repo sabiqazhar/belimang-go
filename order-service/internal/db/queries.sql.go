@@ -54,3 +54,31 @@ type InsertOrderItemsParams struct {
 	Price         pgtype.Numeric `json:"price"`
 	StartingPoint pgtype.Bool    `json:"starting_point"`
 }
+
+const updateOrderAmount = `-- name: UpdateOrderAmount :exec
+UPDATE orders SET total_amount = $2 WHERE id = $1
+`
+
+type UpdateOrderAmountParams struct {
+	ID          int64          `json:"id"`
+	TotalAmount pgtype.Numeric `json:"total_amount"`
+}
+
+func (q *Queries) UpdateOrderAmount(ctx context.Context, arg UpdateOrderAmountParams) error {
+	_, err := q.db.Exec(ctx, updateOrderAmount, arg.ID, arg.TotalAmount)
+	return err
+}
+
+const updateOrderStatus = `-- name: UpdateOrderStatus :exec
+UPDATE orders SET status = $2 WHERE id = $1
+`
+
+type UpdateOrderStatusParams struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+}
+
+func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {
+	_, err := q.db.Exec(ctx, updateOrderStatus, arg.ID, arg.Status)
+	return err
+}

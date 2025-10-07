@@ -7,6 +7,7 @@ option go_package = "github.com/sabiqazhar/belimang-go/proto/merchant";
 service MerchantService {
   rpc GetMerchant (GetMerchantRequest) returns (GetMerchantResponse);
   rpc GetItemsDetail (GetItemsDetailRequest) returns (GetItemsDetailResponse);
+  rpc GetItemDetail (GetItemDetailRequest) returns (GetItemDetailResponse);
 }
 
 message GetMerchantRequest {
@@ -37,4 +38,17 @@ message GetItemsDetailResponse {
   bool error = 3;
   string error_message = 4;
   repeated ItemDetail items = 1;  // Array of item details
+}
+
+message GetItemDetailRequest {
+  int64 id = 1;
+}
+
+message GetItemDetailResponse {
+  int64 id = 1;
+  string name = 2;
+  double price = 3;
+  int64 merchant_id = 4;
+  bool error = 5;
+  string error_message = 6;
 }

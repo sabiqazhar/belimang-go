@@ -10,5 +10,7 @@ import (
 type OrderRepository interface {
 	InsertOrderItems(ctx context.Context, param []intDB.InsertOrderItemsParams) (int64, error)
 	InsertOrder(ctx context.Context, param intDB.InsertOrderParams) (int64, error)
+	UpdateOrderTotalAmount(ctx context.Context, param intDB.UpdateOrderAmountParams) error
+	UpdateOrderStatus(ctx context.Context, param intDB.UpdateOrderStatusParams) error
 	WithTx(tx pgx.Tx) OrderRepository
 }

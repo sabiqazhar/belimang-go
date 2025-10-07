@@ -7,5 +7,5 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(ctx context.Context, req model.CreateEstimateRequest, userId int32) (int64, error)
+	CreateOrder(ctx context.Context, req model.CreateEstimateRequest, userId int32) (model.CreateOrderResponse, error)
 }

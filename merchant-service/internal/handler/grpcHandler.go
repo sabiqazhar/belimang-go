@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+
 	"github.com/sabiqazhar/belimang-go/merchant-service/internal/service"
 	pb "github.com/sabiqazhar/belimang-go/proto/merchant"
 )
@@ -62,5 +63,29 @@ func (h *MerchantGRPCHandler) GetItemsDetail(ctx context.Context, req *pb.GetIte
 	return &pb.GetItemsDetailResponse{
 		Items: responseItems,
 		Error: errAppear,
+	}, nil
+}
+
+func (h *MerchantGRPCHandler) GetItemDetail(ctx context.Context, req *pb.GetItemDetailRequest) (*pb.GetItemDetailResponse, error) {
+	itemDetail, err := h.merchantService.GetItemByID(ctx, req.Id)
+	if err != nil {
+		return &pb.GetItemDetailResponse{
+			Error: true,
+		}, nil
+	}
+
+	priceAsFloat8, err := itemDetail.Price.Float64Value()
+	if err != nil || !itemDetail.Price.Valid {
+		return &pb.GetItemDetailResponse{
+			Error: true,
+		}, nil
+	}
+
+	return &pb.GetItemDetailResponse{
+		Id:         itemDetail.ID,
+		Name:       itemDetail.Name,
+		Price:      priceAsFloat8.Float64,
+		MerchantId: itemDetail.MerchantID.Int64,
+		Error:      false,
 	}, nil
 }

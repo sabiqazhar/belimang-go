@@ -48,11 +48,28 @@ func (r *OrderPostgresRepo) InsertOrderItems(ctx context.Context, param []db.Ins
 		param[i].ID = snowID
 	}
 
-	logger.Logger.Info().Interface("orderItems", param).Msg("Inserting order items")
 	rowsInserted, err := r.db.InsertOrderItems(ctx, param)
 	if err != nil {
 		logger.Logger.Error().Err(err).Msg("failed to insert order items")
 		return 0, err
 	}
 	return rowsInserted, nil
+}
+
+func (r *OrderPostgresRepo) UpdateOrderTotalAmount(ctx context.Context, param db.UpdateOrderAmountParams) error {
+	err := r.db.UpdateOrderAmount(ctx, param)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to update order total amount")
+		return err
+	}
+	return nil
+}
+
+func (r *OrderPostgresRepo) UpdateOrderStatus(ctx context.Context, param db.UpdateOrderStatusParams) error {
+	err := r.db.UpdateOrderStatus(ctx, param)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to update order status")
+		return err
+	}
+	return nil
 }
