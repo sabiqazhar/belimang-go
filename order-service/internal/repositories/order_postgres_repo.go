@@ -73,3 +73,12 @@ func (r *OrderPostgresRepo) UpdateOrderStatus(ctx context.Context, param db.Upda
 	}
 	return nil
 }
+
+func (r *OrderPostgresRepo) GetOrderByID(ctx context.Context, orderID int64) (db.GetOrderByIdRow, error) {
+	order, err := r.db.GetOrderById(ctx, orderID)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get order by id")
+		return db.GetOrderByIdRow{}, err
+	}
+	return order, nil
+}

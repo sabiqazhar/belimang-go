@@ -38,3 +38,9 @@ type (
 		Location LongLat
 	}
 )
+
+type (
+	CreateOrderRequest struct {
+		CalculatedEstimateId int64 `json:"calculatedEstimateId" binding:"required"`
+	}
+)

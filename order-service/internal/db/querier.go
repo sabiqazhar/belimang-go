@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	GetOrderById(ctx context.Context, id int64) (GetOrderByIdRow, error)
 	InsertOrder(ctx context.Context, arg InsertOrderParams) (int64, error)
 	InsertOrderItems(ctx context.Context, arg []InsertOrderItemsParams) (int64, error)
 	UpdateOrderAmount(ctx context.Context, arg UpdateOrderAmountParams) error

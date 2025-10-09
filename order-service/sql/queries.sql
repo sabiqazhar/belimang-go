@@ -11,3 +11,8 @@ UPDATE orders SET total_amount = $2 WHERE id = $1;
 
 -- name: UpdateOrderStatus :exec
 UPDATE orders SET status = $2 WHERE id = $1;
+
+-- name: GetOrderById :one
+SELECT id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude, total_distance_in_meters
+FROM orders
+WHERE id = $1;
