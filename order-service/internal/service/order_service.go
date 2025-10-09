@@ -46,7 +46,10 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req model.CreateEsti
 
 	txRepo := s.orderRepo.WithTx(tx)
 
-	orders, err := s.gatherMerchantDetailFromOrder(ctx, req.Orders)
+	//orders, err := s.gatherMerchantDetailFromOrder(ctx, req.Orders)
+
+	//gatherMerchantDetailConcurrent
+	orders, err := s.gatherMerchantDetailConcurrent(ctx, req.Orders)
 	if err != nil {
 		return model.CreateOrderResponse{}, err
 	}
@@ -75,7 +78,8 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req model.CreateEsti
 		return model.CreateOrderResponse{}, err
 	}
 
-	totalAmount, orderItems, err := s.constructInsertOrderItems(ctx, req, orderID)
+	//totalAmount, orderItems, err := s.constructInsertOrderItems(ctx, req, orderID)
+	totalAmount, orderItems, err := s.ConstructInsertOrderItemsConcurrent(ctx, req, orderID)
 	err = txRepo.UpdateOrderTotalAmount(ctx, db.UpdateOrderAmountParams{
 		ID:          orderID,
 		TotalAmount: helper.FloatToNumeric(totalAmount),
