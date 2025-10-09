@@ -13,4 +13,5 @@ type OrderRepository interface {
 	UpdateOrderTotalAmount(ctx context.Context, param intDB.UpdateOrderAmountParams) error
 	UpdateOrderStatus(ctx context.Context, param intDB.UpdateOrderStatusParams) error
 	WithTx(tx pgx.Tx) OrderRepository
+	GetOrderByID(ctx context.Context, orderID int64) (intDB.GetOrderByIdRow, error)
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sabiqazhar/belimang-go/order-service/constant"
 	"github.com/sabiqazhar/belimang-go/order-service/internal/client"
 	pb "github.com/sabiqazhar/belimang-go/proto/merchant"
 
@@ -237,4 +238,28 @@ func (s *OrderServiceImpl) constructInsertOrderItems(ctx context.Context, req mo
 		}
 	}
 	return totalAmount, orderItems, nil
+}
+
+func (s *OrderServiceImpl) UpdateOrderStatusOrdered(ctx context.Context, orderID, userID int64) error {
+	orderDetail, err := s.orderRepo.GetOrderByID(ctx, orderID)
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to get order by id")
+		return constant.ErrOrderNotFound
+	}
+
+	if orderDetail.CustomerID != int32(userID) {
+		logger.Logger.Info().Err(err).Msg("failed to update order: unauthorized")
+		return constant.ErrOrderNotAuthorized
+	}
+
+	err = s.orderRepo.UpdateOrderStatus(ctx, db.UpdateOrderStatusParams{
+		ID:     orderID,
+		Status: "ordered",
+	})
+	if err != nil {
+		logger.Logger.Error().Err(err).Msg("failed to update order status to ordered")
+		return constant.ErrOrderNotAuthorized
+	}
+
+	return nil
 }

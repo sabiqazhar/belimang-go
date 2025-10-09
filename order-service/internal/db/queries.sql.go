@@ -11,6 +11,41 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getOrderById = `-- name: GetOrderById :one
+SELECT id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude, total_distance_in_meters
+FROM orders
+WHERE id = $1
+`
+
+type GetOrderByIdRow struct {
+	ID                             int64            `json:"id"`
+	CustomerID                     int32            `json:"customer_id"`
+	OrderDate                      pgtype.Timestamp `json:"order_date"`
+	Status                         string           `json:"status"`
+	TotalAmount                    pgtype.Numeric   `json:"total_amount"`
+	EstimatedDeliveryTimeInMinutes int32            `json:"estimated_delivery_time_in_minutes"`
+	Longitude                      pgtype.Float8    `json:"longitude"`
+	Latitude                       pgtype.Float8    `json:"latitude"`
+	TotalDistanceInMeters          int32            `json:"total_distance_in_meters"`
+}
+
+func (q *Queries) GetOrderById(ctx context.Context, id int64) (GetOrderByIdRow, error) {
+	row := q.db.QueryRow(ctx, getOrderById, id)
+	var i GetOrderByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.CustomerID,
+		&i.OrderDate,
+		&i.Status,
+		&i.TotalAmount,
+		&i.EstimatedDeliveryTimeInMinutes,
+		&i.Longitude,
+		&i.Latitude,
+		&i.TotalDistanceInMeters,
+	)
+	return i, err
+}
+
 const insertOrder = `-- name: InsertOrder :one
 INSERT INTO orders (id, customer_id, order_date, status, total_amount, estimated_delivery_time_in_minutes, longitude, latitude, total_distance_in_meters)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id
