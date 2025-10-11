@@ -10,7 +10,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - belimang_/var/lib/postgresql/data
+      - belimang_data/var/lib/postgresql/data
 
   minio:
     image: minio/minio:latest
