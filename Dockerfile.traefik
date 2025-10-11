@@ -1,0 +1,22 @@
+FROM traefik:v2.10 AS builder
+
+# Init module & add plugin
+RUN go mod init traefik-custom && \
+    go mod tidy
+
+RUN go get github.com/agilezebra/jwt-middleware@latest
+
+# Build custom Traefik with plugin
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -tags netgo \
+    -ldflags "-s -w" \
+    -o /traefik-custom \
+    github.com/traefik/traefik/v2/cmd/traefik
+
+# Final stage
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates tzdata
+COPY --from=builder /traefik-custom /usr/local/bin/traefik
+COPY ./traefik/ /etc/traefik/
+EXPOSE 80 8080
+ENTRYPOINT ["traefik", "--configFile=/etc/traefik/traefik.yml"]
