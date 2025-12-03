@@ -1,0 +1,25 @@
+# ./traefik/traefik.yml
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  file:
+    filename: /etc/traefik/config.yml
+    watch: true
+
+api:
+  dashboard: true
+  insecure: true
+
+log:
+  level: INFO
+
+experimental:
+  localPlugins:
+    jwt:
+      moduleName: github.com/agilezebra/jwt-middleware

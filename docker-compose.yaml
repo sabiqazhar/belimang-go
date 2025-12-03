@@ -10,19 +10,107 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - belimang_data:/var/lib/postgresql/data
+      - belimang_data/var/lib/postgresql/data
 
   minio:
-   image: minio/minio:latest
-   container_name: go-minio
-   restart: always
-   ports:
-     - "9000:9000"
-     - "9090:9090"
-   environment:
-     MINIO_ROOT_USER: minioadmin
-     MINIO_ROOT_PASSWORD: minioadmin
-   command: server --console-address ":9090" /data
+    image: minio/minio:latest
+    container_name: go-minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server --console-address ":9090" /data
+
+  traefik:
+    build:
+      context: .
+      dockerfile: Dockerfile.traefik
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80" # HTTP
+      - "8080:8080" # Dashboard (opsional)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - postgres
+      - minio
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=user_service
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+
+  merchant-service:
+    build:
+      context: ./merchant-service
+      dockerfile: Dockerfile
+    container_name: merchant-service
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=merchant_service
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=order_service
+    depends_on:
+      - postgres
+      - merchant-service
+    labels:
+      - "traefik.enable=true"
+
+  upload-service:
+    build:
+      context: ./upload-service
+      dockerfile: Dockerfile
+    container_name: upload-service
+    restart: always
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=upload_service
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    depends_on:
+      - postgres
+      - minio
+    labels:
+      - "traefik.enable=true"
 
 volumes:
   belimang_data:

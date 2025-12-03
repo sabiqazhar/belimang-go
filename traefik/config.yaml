@@ -1,0 +1,65 @@
+# ./traefik/config.yml
+http:
+  middlewares:
+    jwt-auth:
+      plugin:
+        jwt:
+          signingKey: "user"
+          signingMethod: "HS256"
+          header: "Authorization"
+          prefix: "Bearer "
+          claimsToHeaders:
+            - claim: "user_id"
+              header: "X-User-ID"
+            - claim: "is_admin"
+              header: "X-User-Role"
+
+  routers:
+    # === PUBLIC ROUTES (NO AUTH) ===
+    user-login-register:
+      entryPoints: ["web"]
+      rule: "PathPrefix(`/api/users/login`) || PathPrefix(`/api/users/register`)"
+      service: user-service
+
+    # === PROTECTED ROUTES (JWT REQUIRED) ===
+    user-protected:
+      entryPoints: ["web"]
+      rule: "PathPrefix(`/api/users`) && !PathPrefix(`/api/users/login`) && !PathPrefix(`/api/users/register`)"
+      service: user-service
+      middlewares: ["jwt-auth"]
+
+    merchant-router:
+      entryPoints: ["web"]
+      rule: "PathPrefix(`/api/merchants`)"
+      service: merchant-service
+      middlewares: ["jwt-auth"]
+
+    order-router:
+      entryPoints: ["web"]
+      rule: "PathPrefix(`/api/orders`)"
+      service: order-service
+      middlewares: ["jwt-auth"]
+
+    upload-router:
+      entryPoints: ["web"]
+      rule: "PathPrefix(`/api/uploads`)"
+      service: upload-service
+      middlewares: ["jwt-auth"]
+
+  services:
+    user-service:
+      loadBalancer:
+        servers:
+          - url: "http://user-service:8080"
+    merchant-service:
+      loadBalancer:
+        servers:
+          - url: "http://merchant-service:8081"
+    order-service:
+      loadBalancer:
+        servers:
+          - url: "http://order-service:8082"
+    upload-service:
+      loadBalancer:
+        servers:
+          - url: "http://upload-service:8083"
